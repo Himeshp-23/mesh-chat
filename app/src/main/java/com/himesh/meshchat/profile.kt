@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,8 @@ import kotlinx.coroutines.delay
 fun ProfileScreen(navController: NavController, networkingManager: NetworkingManager) {
     var nameInput by remember { mutableStateOf(networkingManager.myUserName) }
     var showSuccess by remember { mutableStateOf(false) }
+    val isConnected by networkingManager.isConnected.collectAsState()
+    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
 
     LaunchedEffect(showSuccess) {
         if (showSuccess) {
@@ -59,7 +62,6 @@ fun ProfileScreen(navController: NavController, networkingManager: NetworkingMan
 
             Button(
                 onClick = {
-                    // CRITICAL FIX: Tell the Networking Manager to restart the radio with the new name!
                     networkingManager.updateProfileName(nameInput)
                     showSuccess = true
                 },
@@ -77,6 +79,57 @@ fun ProfileScreen(navController: NavController, networkingManager: NetworkingMan
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4ADE80))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Identity Saved & Mesh Updated!", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("Mesh Status", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = BlueAccent, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Node Name", color = TextGray, fontSize = 12.sp)
+                            Text(networkingManager.myUserName, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    HorizontalDivider(color = AppBackground, thickness = 1.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            if (isConnected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                            contentDescription = null,
+                            tint = if (isConnected) Color(0xFF4ADE80) else TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Connection Status", color = TextGray, fontSize = 12.sp)
+                            Text(
+                                if (isConnected) "Connected" else "Disconnected",
+                                color = if (isConnected) Color(0xFF4ADE80) else TextGray,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    connectedPeerName?.let { peerName ->
+                        HorizontalDivider(color = AppBackground, thickness = 1.dp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = BlueAccent, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Connected Peer", color = TextGray, fontSize = 12.sp)
+                                Text(peerName, color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             }
         }

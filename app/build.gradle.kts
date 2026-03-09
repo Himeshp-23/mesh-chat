@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "com.himesh.meshchat"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.himesh.meshchat"

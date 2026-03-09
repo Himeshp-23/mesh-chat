@@ -40,6 +40,7 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
     val availableDevices by networkingManager.availableDevices.collectAsState()
     val incomingRequest by networkingManager.incomingRequest.collectAsState()
     val isConnected by networkingManager.isConnected.collectAsState()
+    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
 
     var isScanning by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -121,6 +122,45 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
                 }
             }
 
+            // Connected status banner
+            if (isConnected) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = BlueAccent.copy(alpha = 0.15f)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4ADE80), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Connected to ${connectedPeerName ?: "peer"}", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { navController.navigate("chat") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = BlueAccent)
+                            ) {
+                                Icon(Icons.Default.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Go to Chat", color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = { networkingManager.disconnect() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                            ) {
+                                Text("Disconnect")
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(30.dp))
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -193,6 +233,12 @@ fun BottomNavBar(navController: NavController, currentRoute: String) {
             icon = { Icon(Icons.Default.Bluetooth, null) }, label = { Text("Radar") },
             selected = currentRoute == "home",
             onClick = { if (currentRoute != "home") navController.navigate("home") },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Chat, null) }, label = { Text("Chat") },
+            selected = currentRoute == "chat",
+            onClick = { if (currentRoute != "chat") navController.navigate("chat") },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
         )
         NavigationBarItem(

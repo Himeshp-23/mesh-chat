@@ -4,6 +4,9 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,16 +34,20 @@ fun SplashScreen(navController: NavController) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF121212)),
+        modifier = Modifier.fillMaxSize().background(AppBackground),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier.size(100.dp).scale(scale).clip(CircleShape).background(Color(0xFF00E676).copy(alpha = 0.2f)),
+                modifier = Modifier.size(100.dp).scale(scale).clip(CircleShape).background(BlueAccent.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
-            ) { Text("⬡", fontSize = 60.sp, color = Color(0xFF00E676)) }
+            ) {
+                Icon(Icons.Default.Wifi, contentDescription = null, tint = BlueAccent, modifier = Modifier.size(56.dp))
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Text("Mesh Chat", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Peer-to-Peer Mesh Network", fontSize = 14.sp, color = TextGray)
         }
     }
 }
