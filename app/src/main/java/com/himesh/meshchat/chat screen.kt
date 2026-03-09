@@ -4,77 +4,164 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(navController: NavController, networkingManager: NetworkingManager) {
     val messages by networkingManager.messages.collectAsState()
+    val isConnected by networkingManager.isConnected.collectAsState()
+    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
     var inputText by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFF121212))) {
-        TopAppBar(
-            title = { Text("Mesh Comms", color = Color.White) },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E1E1E))
-        )
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
 
-
-        val currentMyName = networkingManager.myUserName // Capture this ONCE for the whole list
-
-        LazyColumn(modifier = Modifier.weight(1f).padding(16.dp)) {
-            items(messages) { msg ->
-                // Check if the message starts with our current name
-                val isMine = msg.startsWith("[$currentMyName]")
-
-                // Clean the message by removing the tag
-                val cleanMsg = if (isMine) msg.replace("[$currentMyName]: ", "") else msg
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
+    Scaffold(
+        containerColor = AppBackground,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = if (connectedPeerName != null) connectedPeerName!! else "Mesh Comms",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (connectedPeerName != null) {
+                            Text("Connected", color = BlueAccent, fontSize = 12.sp)
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                actions = {
+                    if (isConnected) {
+                        IconButton(onClick = {
+                            networkingManager.disconnect()
+                            navController.popBackStack()
+                        }) {
+                            Icon(Icons.Default.LinkOff, contentDescription = "Disconnect", tint = Color.Red)
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardBackground)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (!isConnected) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isMine) Color(0xFF004D40) else Color(0xFF2C2C2C))
-                            .padding(12.dp)
-                    ) {
-                        Text(text = cleanMsg, color = Color.White)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Not Connected", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Go to Radar to find and connect\nto a nearby device.", color = TextGray, fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Button(
+                            onClick = { navController.navigate("home") },
+                            colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Open Radar", color = Color.White)
+                        }
+                    }
+                }
+            } else {
+                val currentMyName = networkingManager.myUserName
+
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    items(messages) { msg ->
+                        val isMine = msg.startsWith("[$currentMyName]")
+                        val cleanMsg = if (isMine) msg.replace("[$currentMyName]: ", "") else msg
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (isMine) BlueAccent else CardBackground)
+                                    .padding(12.dp)
+                            ) {
+                                Text(text = cleanMsg, color = Color.White)
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        Row(modifier = Modifier.fillMaxWidth().background(Color(0xFF1E1E1E)).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Transmit data...", color = Color.Gray) },
-                // Use the updated colors API
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color(0xFF00E676), // NeonAccent
-                    unfocusedBorderColor = Color.Gray
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                if (inputText.isNotBlank()) {
-                    networkingManager.sendMessage(inputText)
-                    inputText = ""
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CardBackground)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Transmit data...", color = TextGray) },
+                    enabled = isConnected,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = BlueAccent,
+                        unfocusedBorderColor = TextGray
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = {
+                        if (inputText.isNotBlank()) {
+                            networkingManager.sendMessage(inputText)
+                            inputText = ""
+                        }
+                    },
+                    enabled = isConnected,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isConnected) BlueAccent else TextGray)
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.White)
                 }
-            }) { Text("Send") }
+            }
         }
     }
 }

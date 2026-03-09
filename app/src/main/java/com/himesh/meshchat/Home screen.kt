@@ -40,6 +40,7 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
     val availableDevices by networkingManager.availableDevices.collectAsState()
     val incomingRequest by networkingManager.incomingRequest.collectAsState()
     val isConnected by networkingManager.isConnected.collectAsState()
+    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
 
     var isScanning by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -139,6 +140,42 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            if (isConnected) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = CardBackground),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Color(0xFF4ADE80)))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Connected to ${connectedPeerName ?: "Peer"}", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { networkingManager.disconnect() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB91C1C)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Disconnect", color = Color.White)
+                            }
+                            Button(
+                                onClick = { navController.navigate("chat") },
+                                colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Go to Chat", color = Color.White)
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             if (!isScanning) {
                 Button(
                     onClick = { launcher.launch(permissionsToRequest.toTypedArray()) },
@@ -193,6 +230,12 @@ fun BottomNavBar(navController: NavController, currentRoute: String) {
             icon = { Icon(Icons.Default.Bluetooth, null) }, label = { Text("Radar") },
             selected = currentRoute == "home",
             onClick = { if (currentRoute != "home") navController.navigate("home") },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Chat, null) }, label = { Text("Chat") },
+            selected = currentRoute == "chat",
+            onClick = { if (currentRoute != "chat") navController.navigate("chat") },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
         )
         NavigationBarItem(

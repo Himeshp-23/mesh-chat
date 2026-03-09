@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,8 @@ import kotlinx.coroutines.delay
 fun ProfileScreen(navController: NavController, networkingManager: NetworkingManager) {
     var nameInput by remember { mutableStateOf(networkingManager.myUserName) }
     var showSuccess by remember { mutableStateOf(false) }
+    val isConnected by networkingManager.isConnected.collectAsState()
+    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
 
     LaunchedEffect(showSuccess) {
         if (showSuccess) {
@@ -59,7 +62,6 @@ fun ProfileScreen(navController: NavController, networkingManager: NetworkingMan
 
             Button(
                 onClick = {
-                    // CRITICAL FIX: Tell the Networking Manager to restart the radio with the new name!
                     networkingManager.updateProfileName(nameInput)
                     showSuccess = true
                 },
@@ -77,6 +79,41 @@ fun ProfileScreen(navController: NavController, networkingManager: NetworkingMan
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4ADE80))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Identity Saved & Mesh Updated!", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Mesh Status", color = TextGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = BlueAccent, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Node Name", color = TextGray, fontSize = 12.sp)
+                            Text(networkingManager.myUserName, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    HorizontalDivider(color = AppBackground)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(if (isConnected) Color(0xFF4ADE80) else TextGray)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Connection Status", color = TextGray, fontSize = 12.sp)
+                            Text(
+                                if (isConnected) "Connected to ${connectedPeerName ?: "Peer"}" else "Disconnected",
+                                color = if (isConnected) Color(0xFF4ADE80) else Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }

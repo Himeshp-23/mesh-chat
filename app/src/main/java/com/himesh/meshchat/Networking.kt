@@ -30,6 +30,10 @@ class NetworkingManager(private val context: Context) {
 
     private var connectedEndpointId: String? = null
     private val endpointNames = mutableMapOf<String, String>()
+    private val pendingOutgoingConnections = mutableSetOf<String>()
+
+    private val _connectedPeerName = MutableStateFlow<String?>(null)
+    val connectedPeerName: StateFlow<String?> = _connectedPeerName.asStateFlow()
 
     private val strategy = Strategy.P2P_CLUSTER
     private val serviceId = "com.college.meshproject"
@@ -45,14 +49,20 @@ class NetworkingManager(private val context: Context) {
 
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
-            // Native API trigger: Someone asked to connect. Show popup!
             endpointNames[endpointId] = info.endpointName
-            _incomingRequest.value = Pair(endpointId, info.endpointName)
+            if (pendingOutgoingConnections.remove(endpointId)) {
+                // We initiated — auto-accept
+                connectionsClient.acceptConnection(endpointId, payloadCallback)
+            } else {
+                // Incoming — show dialog
+                _incomingRequest.value = Pair(endpointId, info.endpointName)
+            }
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             if (result.status.isSuccess) {
                 connectedEndpointId = endpointId
+                _connectedPeerName.value = endpointNames[endpointId]
                 _isConnected.value = true
                 _incomingRequest.value = null
             } else {
@@ -62,6 +72,7 @@ class NetworkingManager(private val context: Context) {
 
         override fun onDisconnected(endpointId: String) {
             connectedEndpointId = null
+            _connectedPeerName.value = null
             _isConnected.value = false
 
             val updated = _availableDevices.value.toMutableMap()
@@ -103,6 +114,7 @@ class NetworkingManager(private val context: Context) {
 
     // Triggered by the "Connect" button in UI
     fun requestConnection(endpointId: String) {
+        pendingOutgoingConnections.add(endpointId)
         connectionsClient.requestConnection(myUserName, endpointId, connectionLifecycleCallback)
     }
 
@@ -118,6 +130,7 @@ class NetworkingManager(private val context: Context) {
 
     fun disconnect() {
         connectedEndpointId?.let { connectionsClient.disconnectFromEndpoint(it) }
+        _connectedPeerName.value = null
         _isConnected.value = false
         _messages.value = emptyList() // Clear chat
     }
