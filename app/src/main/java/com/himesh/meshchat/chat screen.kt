@@ -43,7 +43,7 @@ fun ChatScreen(navController: NavController, networkingManager: NetworkingManage
                 title = {
                     Column {
                         Text(
-                            text = if (connectedPeerName != null) connectedPeerName!! else "Mesh Comms",
+                            text = connectedPeerName ?: "Mesh Comms",
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
