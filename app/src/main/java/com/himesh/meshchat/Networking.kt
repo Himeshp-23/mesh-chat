@@ -13,11 +13,11 @@ class NetworkingManager(private val context: Context) {
 
     var myUserName = "Node_${(10..99).random()}"
 
-    // Discovered devices we can see but haven't connected to yet
+    // Discovered seen but haven't connected to yet
     private val _availableDevices = MutableStateFlow<Map<String, String>>(emptyMap())
     val availableDevices: StateFlow<Map<String, String>> = _availableDevices.asStateFlow()
 
-    // Who is asking to connect to us? (ID to Name)
+    // Who is asking to connect to us
     private val _incomingRequest = MutableStateFlow<Pair<String, String>?>(null)
     val incomingRequest: StateFlow<Pair<String, String>?> = _incomingRequest.asStateFlow()
 
@@ -50,13 +50,10 @@ class NetworkingManager(private val context: Context) {
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             endpointNames[endpointId] = info.endpointName
-            if (pendingOutgoingConnections.remove(endpointId)) {
-                // We initiated — auto-accept
+            if (pendingOutgoingConnections.remove(endpointId)) 
                 connectionsClient.acceptConnection(endpointId, payloadCallback)
-            } else {
-                // Incoming — show dialog
-                _incomingRequest.value = Pair(endpointId, info.endpointName)
-            }
+            else  _incomingRequest.value = Pair(endpointId, info.endpointName)
+    
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
@@ -83,7 +80,6 @@ class NetworkingManager(private val context: Context) {
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            // Just add them to the list. Do NOT auto-connect.
             val updated = _availableDevices.value.toMutableMap()
             updated[endpointId] = info.endpointName
             _availableDevices.value = updated
