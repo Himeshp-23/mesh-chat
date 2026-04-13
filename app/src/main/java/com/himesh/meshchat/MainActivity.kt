@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
                 composable("home") { HomeScreen(navController, networkingManager) }
                 composable("chat") { ChatScreen(navController, networkingManager) }
                 composable("profile") { ProfileScreen(navController, networkingManager) }
-              //  composable("devices") { DevicesScreen(navController, networkingManager) }
+         
             }
         }
     }
