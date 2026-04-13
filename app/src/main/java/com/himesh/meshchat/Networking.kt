@@ -21,7 +21,7 @@ class NetworkingManager(private val context: Context) {
     private val _incomingRequest = MutableStateFlow<Pair<String, String>?>(null)
     val incomingRequest: StateFlow<Pair<String, String>?> = _incomingRequest.asStateFlow()
 
-    // Are we successfully connected and ready to chat?
+    // Are we successfully connected 
     private val _isConnected = MutableStateFlow<Boolean>(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
