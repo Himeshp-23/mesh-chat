@@ -13,7 +13,7 @@ class NetworkingManager(private val context: Context) {
 
     var myUserName = "Node_${(10..99).random()}"
 
-    // Discovered seen but haven't connected to yet
+    // Discovered seen but not connected
     private val _availableDevices = MutableStateFlow<Map<String, String>>(emptyMap())
     val availableDevices: StateFlow<Map<String, String>> = _availableDevices.asStateFlow()
 
