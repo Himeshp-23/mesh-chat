@@ -16,23 +16,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(navController: NavController, networkingManager: NetworkingManager) {
+fun ChatScreen(
+    navController: NavController,
+    networkingManager: NetworkingManager
+) {
     val messages by networkingManager.messages.collectAsState()
     val isConnected by networkingManager.isConnected.collectAsState()
-    val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
-    var inputText by remember { mutableStateOf("") }
+    val peerName by networkingManager.connectedPeerName.collectAsState()
+
+    var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            listState.animateScrollToItem(messages.lastIndex)
         }
     }
 
@@ -42,19 +45,15 @@ fun ChatScreen(navController: NavController, networkingManager: NetworkingManage
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            text = connectedPeerName ?: "Mesh Comms",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (connectedPeerName != null) {
+                        Text(peerName ?: "Mesh Comms", color = Color.White)
+                        if (peerName != null) {
                             Text("Connected", color = BlueAccent, fontSize = 12.sp)
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
                     }
                 },
                 actions = {
@@ -63,68 +62,84 @@ fun ChatScreen(navController: NavController, networkingManager: NetworkingManage
                             networkingManager.disconnect()
                             navController.popBackStack()
                         }) {
-                            Icon(Icons.Default.LinkOff, contentDescription = "Disconnect", tint = Color.Red)
+                            Icon(Icons.Default.LinkOff, null, tint = Color.Red)
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardBackground)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = CardBackground
+                )
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
+
+            // ---- NOT CONNECTED ----
             if (!isConnected) {
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Not Connected", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Go to Radar to find and connect\nto a nearby device.", color = TextGray, fontSize = 14.sp)
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Text("Not Connected", color = Color.White, fontSize = 20.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Go to Radar to connect",
+                            color = TextGray,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(20.dp))
                         Button(
                             onClick = { navController.navigate("home") },
-                            colors = ButtonDefaults.buttonColors(containerColor = BlueAccent),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = ButtonDefaults.buttonColors(BlueAccent)
                         ) {
                             Text("Open Radar", color = Color.White)
                         }
                     }
                 }
-            } else {
-                val currentMyName = networkingManager.myUserName
+            }
+
+            // ---- CHAT LIST ----
+            else {
+                val myName = networkingManager.myUserName
 
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(16.dp)
                 ) {
                     items(messages) { msg ->
-                        val isMine = msg.startsWith("[$currentMyName]")
-                        val cleanMsg = if (isMine) msg.replace("[$currentMyName]: ", "") else msg
+
+                        val isMine = msg.startsWith("[$myName]")
+                        val clean = msg.removePrefix("[$myName]: ")
 
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
                         ) {
                             Box(
                                 modifier = Modifier
+                                    .padding(vertical = 4.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(if (isMine) BlueAccent else CardBackground)
                                     .padding(12.dp)
                             ) {
-                                Text(text = cleanMsg, color = Color.White)
+                                Text(clean, color = Color.White)
                             }
                         }
                     }
                 }
             }
 
+            // ---- INPUT ----
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,26 +147,27 @@ fun ChatScreen(navController: NavController, networkingManager: NetworkingManage
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
+                    value = input,
+                    onValueChange = { input = it },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Transmit data...", color = TextGray) },
                     enabled = isConnected,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = BlueAccent,
-                        unfocusedBorderColor = TextGray
+                        unfocusedTextColor = Color.White
                     ),
                     shape = RoundedCornerShape(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+
+                Spacer(Modifier.width(8.dp))
+
                 IconButton(
                     onClick = {
-                        if (inputText.isNotBlank()) {
-                            networkingManager.sendMessage(inputText)
-                            inputText = ""
+                        if (input.isNotBlank()) {
+                            networkingManager.sendMessage(input)
+                            input = ""
                         }
                     },
                     enabled = isConnected,
@@ -159,7 +175,7 @@ fun ChatScreen(navController: NavController, networkingManager: NetworkingManage
                         .clip(RoundedCornerShape(12.dp))
                         .background(if (isConnected) BlueAccent else TextGray)
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.White)
+                    Icon(Icons.Default.Send, null, tint = Color.White)
                 }
             }
         }

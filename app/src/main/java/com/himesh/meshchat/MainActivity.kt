@@ -23,8 +23,7 @@ class MainActivity : ComponentActivity() {
                 composable("splash") { SplashScreen(navController) }
                 composable("home") { HomeScreen(navController, networkingManager) }
                 composable("chat") { ChatScreen(navController, networkingManager) }
-                composable("profile") { ProfileScreen(navController, networkingManager) }
-         
+
             }
         }
     }

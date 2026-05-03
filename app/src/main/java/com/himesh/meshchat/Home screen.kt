@@ -72,14 +72,12 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
         }
     }
 
-    // Auto-navigate to chat when connection is accepted by both sides
     LaunchedEffect(isConnected) {
         if (isConnected) {
             navController.navigate("chat")
         }
     }
 
-    // NATIVE CONNECTION DIALOG
     if (incomingRequest != null) {
         val (endpointId, reqName) = incomingRequest!!
         AlertDialog(
@@ -236,12 +234,6 @@ fun BottomNavBar(navController: NavController, currentRoute: String) {
             icon = { Icon(Icons.Default.Chat, null) }, label = { Text("Chat") },
             selected = currentRoute == "chat",
             onClick = { if (currentRoute != "chat") navController.navigate("chat") },
-            colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, null) }, label = { Text("Profile") },
-            selected = currentRoute == "profile",
-            onClick = { if (currentRoute != "profile") navController.navigate("profile") },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
         )
     }
