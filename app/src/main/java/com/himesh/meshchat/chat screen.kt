@@ -1,5 +1,4 @@
 package com.himesh.meshchat
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -29,16 +27,12 @@ fun ChatScreen(
     val messages by networkingManager.messages.collectAsState()
     val isConnected by networkingManager.isConnected.collectAsState()
     val peerName by networkingManager.connectedPeerName.collectAsState()
-
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-
     LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
+        if (messages.isNotEmpty())
             listState.animateScrollToItem(messages.lastIndex)
-        }
     }
-
     Scaffold(
         containerColor = AppBackground,
         topBar = {
@@ -46,15 +40,13 @@ fun ChatScreen(
                 title = {
                     Column {
                         Text(peerName ?: "Mesh Comms", color = Color.White)
-                        if (peerName != null) {
+                        if (peerName != null)
                             Text("Connected", color = BlueAccent, fontSize = 12.sp)
-                        }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
-                    }
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White) }
                 },
                 actions = {
                     if (isConnected) {
@@ -68,19 +60,13 @@ fun ChatScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = CardBackground
-                )
-            )
-        }
+                )) }
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-        ) {
-
-            // ---- NOT CONNECTED ----
-            if (!isConnected) {
+                .padding(padding))
+        { if (!isConnected) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -105,11 +91,8 @@ fun ChatScreen(
                     }
                 }
             }
-
-            // ---- CHAT LIST ----
-            else {
+         else {
                 val myName = networkingManager.myUserName
-
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -117,10 +100,8 @@ fun ChatScreen(
                         .padding(16.dp)
                 ) {
                     items(messages) { msg ->
-
                         val isMine = msg.startsWith("[$myName]")
                         val clean = msg.removePrefix("[$myName]: ")
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
@@ -133,22 +114,14 @@ fun ChatScreen(
                                     .padding(12.dp)
                             ) {
                                 Text(clean, color = Color.White)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ---- INPUT ----
+                            } } }}}
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(CardBackground)
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                OutlinedTextField(
+            ) { OutlinedTextField(
                     value = input,
                     onValueChange = { input = it },
                     modifier = Modifier.weight(1f),
@@ -160,9 +133,7 @@ fun ChatScreen(
                     ),
                     shape = RoundedCornerShape(20.dp)
                 )
-
                 Spacer(Modifier.width(8.dp))
-
                 IconButton(
                     onClick = {
                         if (input.isNotBlank()) {
@@ -176,8 +147,5 @@ fun ChatScreen(
                         .background(if (isConnected) BlueAccent else TextGray)
                 ) {
                     Icon(Icons.Default.Send, null, tint = Color.White)
-                }
-            }
-        }
-    }
-}
+                } }
+        } }}

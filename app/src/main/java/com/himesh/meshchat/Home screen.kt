@@ -33,7 +33,6 @@ val AppBackground = Color(0xFF131A22)
 val CardBackground = Color(0xFF1E2633)
 val BlueAccent = Color(0xFF2E8CFF)
 val TextGray = Color(0xFF94A3B8)
-
 @SuppressLint("InlinedApi")
 @Composable
 fun HomeScreen(navController: NavController, networkingManager: NetworkingManager) {
@@ -41,27 +40,23 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
     val incomingRequest by networkingManager.incomingRequest.collectAsState()
     val isConnected by networkingManager.isConnected.collectAsState()
     val connectedPeerName by networkingManager.connectedPeerName.collectAsState()
-
     var isScanning by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
     val permissionsToRequest = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.NEARBY_WIFI_DEVICES); add(Manifest.permission.BLUETOOTH_SCAN); add(Manifest.permission.BLUETOOTH_ADVERTISE); add(Manifest.permission.BLUETOOTH_CONNECT)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             add(Manifest.permission.BLUETOOTH_SCAN); add(Manifest.permission.BLUETOOTH_ADVERTISE); add(Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
+        } else
             add(Manifest.permission.BLUETOOTH); add(Manifest.permission.BLUETOOTH_ADMIN)
-        }
-    }
 
+    }
     val btLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     LaunchedEffect(Unit) {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter?.isEnabled == false) {
+        if (bluetoothAdapter?.isEnabled == false)
             btLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-        }
 
         val allGranted = permissionsToRequest.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
@@ -73,9 +68,8 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
     }
 
     LaunchedEffect(isConnected) {
-        if (isConnected) {
+        if (isConnected)
             navController.navigate("chat")
-        }
     }
 
     if (incomingRequest != null) {
@@ -91,24 +85,17 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
                 }
             },
             dismissButton = {
-                TextButton(onClick = { networkingManager.rejectConnection(endpointId) }) { Text("Reject", color = Color.Red) }
-            }
-        )
-    }
-
+                TextButton(onClick = { networkingManager.rejectConnection(endpointId) }) { Text("Reject", color = Color.Red) } }
+        ) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
         if (perms.values.all { it }) {
             networkingManager.startMesh()
-            isScanning = true
-        }
-    }
-
+            isScanning = true } }
     Scaffold(
         bottomBar = { BottomNavBar(navController, "home") },
         containerColor = AppBackground
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-
             Row(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Bluetooth, contentDescription = null, tint = BlueAccent, modifier = Modifier.size(28.dp))
@@ -117,27 +104,17 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
                 }
                 IconButton(onClick = { launcher.launch(permissionsToRequest.toTypedArray()) }) {
                     Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = BlueAccent)
-                }
-            }
-
+                }}
             Spacer(modifier = Modifier.height(30.dp))
-
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(modifier = Modifier.size(120.dp).clip(CircleShape).background(BlueAccent.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
                     Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(if (isScanning) BlueAccent else TextGray), contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.WifiTethering, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
-                    }
-                }
-            }
-
+                    } }}
             Spacer(modifier = Modifier.height(20.dp))
-
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Text(if (isScanning) "Radar Active..." else "Sensors Idle", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
-
+                Text(if (isScanning) "Radar Active..." else "Sensors Idle", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
             Spacer(modifier = Modifier.height(24.dp))
-
             if (isConnected) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -167,12 +144,8 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text("Go to Chat", color = Color.White)
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                            } } }}
+                Spacer(modifier = Modifier.height(16.dp)) }
 
             if (!isScanning) {
                 Button(
@@ -212,15 +185,9 @@ fun HomeScreen(navController: NavController, networkingManager: NetworkingManage
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Text("Connect", color = Color.White)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
+                            } }
+                    }}
+            }}} }
 @Composable
 fun BottomNavBar(navController: NavController, currentRoute: String) {
     NavigationBar(containerColor = AppBackground, contentColor = TextGray) {
@@ -228,12 +195,11 @@ fun BottomNavBar(navController: NavController, currentRoute: String) {
             icon = { Icon(Icons.Default.Bluetooth, null) }, label = { Text("Radar") },
             selected = currentRoute == "home",
             onClick = { if (currentRoute != "home") navController.navigate("home") },
-            colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
-        )
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent))
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Chat, null) }, label = { Text("Chat") },
+            icon = { Icon(Icons.Default.Chat, null)},label={Text("Chat") },
             selected = currentRoute == "chat",
-            onClick = { if (currentRoute != "chat") navController.navigate("chat") },
+            onClick = { if (currentRoute!="chat")navController.navigate("chat") },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = BlueAccent, selectedTextColor = BlueAccent, indicatorColor = Color.Transparent)
         )
     }
